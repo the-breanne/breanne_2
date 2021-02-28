@@ -6,7 +6,8 @@ from django.shortcuts import render, get_object_or_404
 from django.shortcuts import redirect
 from django.db.models import Sum
 from _decimal import Decimal
-
+import csv
+from django.http import HttpResponse
 
 now = timezone.now()
 def home(request):
@@ -169,3 +170,17 @@ def summary(request, pk):
                               'services': services,
                               'sum_service_charge': sum_service_charge,
                               'sum_product_charge': sum_product_charge,})
+
+@login_required
+def export_customers(request):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="customers.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['cust_name', 'organization', 'role', 'email', 'phone_number', 'bldgroom', 'account_number', 'address', 'city', 'state', 'zipcode'])
+
+    customers = Customer.objects.all().values_list('cust_name', 'organization', 'role', 'email', 'phone_number', 'bldgroom', 'account_number', 'address', 'city', 'state', 'zipcode')
+    for customer in customers:
+        writer.writerow(customer)
+
+    return response
